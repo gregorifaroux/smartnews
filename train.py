@@ -1,10 +1,15 @@
-# 
+# Topic Modeling
 # 
 import numpy as np
 import pandas as pd
 import feedparser
 from io import StringIO
 from pprint import pprint
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.corpus import wordnet as wn
+import os
+import os.path
+import wget
 
 # Gensim
 import gensim
@@ -16,11 +21,24 @@ from gensim.models import CoherenceModel
 import spacy
 
 # Enable logging for gensim - optional
-import logging
+import 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
 
 import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)
+
+def get_lemma(word):
+    """Use NLTK’s Wordnet to find the meanings of words, synonyms, antonyms, and more"""
+    lemma = wn.morphy(word)
+    if lemma is None:
+        return word
+    else:
+        return lemma
+
+# Root word
+def get_root_word(word):
+    """Use WordNetLemmatizer to get the root word"""
+    return WordNetLemmatizer().lemmatize(get_lemma(word))
 
 # NLTK Stop words
 from nltk.corpus import stopwords
@@ -29,7 +47,7 @@ stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 
 # Define functions for stopwords, bigrams, trigrams and lemmatization
 def remove_stopwords(texts):
-    return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+    return [[get_root_word(word) for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
 def make_bigrams(texts):
     return [bigram_mod[doc] for doc in texts]
@@ -45,25 +63,28 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
     return texts_out
 
-# Import Dataset
-#df = pd.read_json('./data/smallnews.json')
-#d = feedparser.parse('https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
-d = feedparser.parse('https://news.google.com/news/rss/')
+# Get Sample data
+PATH='data/million-headlines.zip'
+if not os.path.isfile(PATH):
+    pprint("File does not exist")
+    wget.download('https://www.kaggle.com/therohk/million-headlines/downloads/million-headlines.zip/6', PATH)
 
-titles = StringIO()
-print('### Titles ###')
-for entry in d['entries']:
-  print(entry.title)
-  titles.write(entry.title)
-  titles.write('=')
+# Import Dataset
+#d = feedparser.parse('https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
+#d = feedparser.parse('https://news.google.com/news/rss/')
+
+#titles = StringIO()
+#print('### Titles ###')
+#for entry in d['entries']:
+#  print(entry.title)
+#  titles.write(entry.title)
+#  titles.write('=')
 
 print('1. Read Title')
-output = StringIO(titles.getvalue())
-# Close object and discard memory buffer --
-# .getvalue() will now raise an exception.
-df = pd.read_csv(output, sep='~', header=None)
-output.close()
-
+#output = StringIO(titles.getvalue())
+#df = pd.read_csv(output, sep='~', header=None)
+#output.close()
+df = pd.read_csv('data/articles_all.csv')
 print(df.head())
 
 # Convert to list
