@@ -10,6 +10,7 @@ from nltk.corpus import wordnet as wn
 import os
 import os.path
 import wget
+import zipfile
 
 # Gensim
 import gensim
@@ -20,12 +21,9 @@ from gensim.models import CoherenceModel
 # spacy for lemmatization
 import spacy
 
-# Enable logging for gensim - optional
-import 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
-
 import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 def get_lemma(word):
     """Use NLTK’s Wordnet to find the meanings of words, synonyms, antonyms, and more"""
@@ -68,6 +66,9 @@ PATH='data/million-headlines.zip'
 if not os.path.isfile(PATH):
     pprint("File does not exist")
     wget.download('https://www.kaggle.com/therohk/million-headlines/downloads/million-headlines.zip/6', PATH)
+    zip_ref = zipfile.ZipFile(PATH, 'r')
+    zip_ref.extractall('data/')
+    zip_ref.close()
 
 # Import Dataset
 #d = feedparser.parse('https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
@@ -84,7 +85,7 @@ print('1. Read Title')
 #output = StringIO(titles.getvalue())
 #df = pd.read_csv(output, sep='~', header=None)
 #output.close()
-df = pd.read_csv('data/articles_all.csv')
+df = pd.read_csv('data/data/million-headlines.csv')
 print(df.head())
 
 # Convert to list
