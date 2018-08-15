@@ -28,6 +28,7 @@ import gensim
 import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
 from gensim.models import CoherenceModel
+from gensim.test.utils import datapath
 
 # spacy for lemmatization
 import spacy
@@ -51,12 +52,14 @@ def get_documents(list, url):
   """Download a Google RSS feed links content to populate the list """
   d = feedparser.parse(url)
   for entry in d['entries']:
-    print(entry.title)
-    print(entry.link)
     try:
       page = urllib.request.urlopen(entry.link)
+      print('  ' + entry.title)
+      print("")
       list.append(text_from_html(page))
     except urllib.error.HTTPError as e:
+      print(e.reason)
+    except urllib.error.URLError as e:
       print(e.reason)
 
 # Process text
@@ -100,11 +103,10 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 
 print('1. Get content')
 documents = []
-get_documents(documents, 'https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
-get_documents(documents, 'https://news.google.com/news/rss/search/section/q/allele?ned=us&gl=US&hl=en')
-get_documents(documents, 'https://news.google.com/news/rss/search/section/q/allergen?ned=us&gl=US&hl=en')
-get_documents(documents, 'https://news.google.com/news/rss/search/section/q/amino%20acids?ned=us&gl=US&hl=en')
-get_documents(documents, 'https://news.google.com/news/rss/search/section/q/protein?ned=us&gl=US&hl=en')
+with open('words.txt') as f:
+   for word in f:
+       print(word)
+       get_documents(documents, 'https://news.google.com/news/rss/search/section/q/' + word + '?ned=us&gl=US&hl=en')
 
 print('Number of documents ' + str(len(documents)))
 
@@ -118,7 +120,7 @@ def sent_to_words(sentences):
 
 data_words = list(sent_to_words(documents))
 
-print(data_words[:1])
+#print(data_words[:1])
 
 # Creating Bigram and Trigram Models
 # Build the bigram and trigram models
@@ -131,7 +133,7 @@ bigram_mod = gensim.models.phrases.Phraser(bigram)
 trigram_mod = gensim.models.phrases.Phraser(trigram)
 
 # See trigram example
-print(trigram_mod[bigram_mod[data_words[0]]])
+#print(trigram_mod[bigram_mod[data_words[0]]])
 
 # Remove Stop Words
 data_words_nostops = remove_stopwords(data_words)
@@ -147,7 +149,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 print("4. Lemmatized")
 data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
-print(data_lemmatized[:1])
+#print(data_lemmatized[:1])
 
 # Create Dictionary
 id2word = corpora.Dictionary(data_lemmatized)
@@ -160,10 +162,10 @@ print("5. View corpus")
 corpus = [id2word.doc2bow(text) for text in texts]
 
 # View
-print(corpus[:1])
+#print(corpus[:1])
 
 # Human readable format of corpus (term-frequency)
-print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
+#print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
 
 # Build LDA model
 print("6. Build LDA model")
@@ -178,10 +180,10 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            per_word_topics=True)
 
 # Print the Keyword in the topics
-print("Print the Keyword in the topics")
-pprint(lda_model.print_topics())
-print("Print the Keyword in the topics ; num_words = 1")
-pprint(lda_model.print_topics(num_words=1))
+#print("Print the Keyword in the topics")
+#pprint(lda_model.print_topics())
+#print("Print the Keyword in the topics ; num_words = 1")
+#pprint(lda_model.print_topics(num_words=1))
 doc_lda = lda_model[corpus]
 
 # Compute Perplexity
@@ -194,7 +196,10 @@ print('\nCoherence Score: ', coherence_lda)
 
 pprint("Top Topics")
 #pprint(lda_model.show_topics(num_topics=20, num_words=1, log=False, formatted=False))
-pprint(lda_model.top_topics(corpus, topn=1))
+#pprint(lda_model.top_topics(corpus, topn=1))
 
 for topic in lda_model.top_topics(corpus, topn=1):
   pprint('Topic: ' + str(topic[0][0][1]))
+
+# Save model to disk.
+lda_model.save(datapath("model"))
