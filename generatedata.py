@@ -1,3 +1,8 @@
+# import libraries
+import urllib.request
+from bs4 import BeautifulSoup
+from bs4.element import Comment
+import feedparser
 # Topic Modeling
 # 
 import warnings
@@ -7,7 +12,6 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 #
 import numpy as np
-import pandas as pd
 import feedparser
 from io import StringIO
 from pprint import pprint
@@ -29,29 +33,33 @@ from gensim.models import CoherenceModel
 import spacy
 
 
-def untar(fname):
-    if (fname.endswith("tar.gz")):
-        tar = tarfile.open(fname)
-        tar.extractall('data/')
-        tar.close()
-        print("Extracted in data Directory")
-    else:
-       sys.exit("Not a tar.gz file")
+# Download documents
+def tag_visible(element):
+    if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
+        return False
+    if isinstance(element, Comment):
+        return False
+    return True
 
-def fixBadZipfile(zipFile):
-    pprint('fix Bad zip file')
-    f = open(zipFile, 'r+b')  
-    data = f.read()  
-    pos = data.find('\x50\x4b\x05\x06') # End of central directory signature  
-    if (pos > 0):  
-        pprint("Trancating file at location " + str(pos + 22)+ ".")  
-        f.seek(pos + 22)   # size of 'ZIP end of central directory record' 
-        f.truncate()  
-        f.close()  
-    else:  
-        # raise error, file is truncated 
-        sys.exit("ZIP file is truncated") 
+def text_from_html(body):
+    soup = BeautifulSoup(body, 'html.parser')
+    texts = soup.findAll(text=True)
+    visible_texts = filter(tag_visible, texts)  
+    return u" ".join(t.strip() for t in visible_texts)
 
+def get_documents(list, url):
+  """Download a Google RSS feed links content to populate the list """
+  d = feedparser.parse(url)
+  for entry in d['entries']:
+    print(entry.title)
+    print(entry.link)
+    try:
+      page = urllib.request.urlopen(entry.link)
+      list.append(text_from_html(page))
+    except urllib.error.HTTPError as e:
+      print(e.reason)
+
+# Process text
 def get_lemma(word):
     """Use NLTK’s Wordnet to find the meanings of words, synonyms, antonyms, and more"""
     lemma = wn.morphy(word)
@@ -88,48 +96,27 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
     return texts_out
 
-# Get Sample data
-PATH='data/reuters21578'
-if not os.path.isfile(PATH + '.csv'):
-    pprint("CSV data does not exist")
-    if not os.path.isfile(PATH+'.tar.gz'):
-        pprint("Download sample data")
-        wget.download('https://archive.ics.uci.edu/ml/machine-learning-databases/reuters21578-mld/reuters21578.tar.gz', PATH+'.tar.gz')
-    untar(PATH+'.tar.gz')
-#    fixBadZipfile(PATH + '.zip')
-#    zip_ref = zipfile.ZipFile(PATH + '.zip', 'r')
-#    zip_ref.extractall('data/')
-#    zip_ref.close()
+# Get documents
 
-# Import Dataset
-#d = feedparser.parse('https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
-#d = feedparser.parse('https://news.google.com/news/rss/')
+print('1. Get content')
+documents = []
+get_documents(documents, 'https://news.google.com/news/rss/search/section/q/life%20science?ned=us&gl=US&hl=en')
+get_documents(documents, 'https://news.google.com/news/rss/search/section/q/allele?ned=us&gl=US&hl=en')
+get_documents(documents, 'https://news.google.com/news/rss/search/section/q/allergen?ned=us&gl=US&hl=en')
+get_documents(documents, 'https://news.google.com/news/rss/search/section/q/amino%20acids?ned=us&gl=US&hl=en')
+get_documents(documents, 'https://news.google.com/news/rss/search/section/q/protein?ned=us&gl=US&hl=en')
 
-#titles = StringIO()
-#print('### Titles ###')
-#for entry in d['entries']:
-#  print(entry.title)
-#  titles.write(entry.title)
-#  titles.write('=')
-
-print('1. Read Title')
-#output = StringIO(titles.getvalue())
-#df = pd.read_csv(output, sep='~', header=None)
-#output.close()
-df = pd.read_csv('data/data/million-headlines.csv')
-print(df.head())
-
-# Convert to list
-data = df.values.tolist()
+print('Number of documents ' + str(len(documents)))
 
 # Tokenize words and Clean-up text
+
 print("2. Tokezine words")
 
 def sent_to_words(sentences):
     for sentence in sentences:
         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
 
-data_words = list(sent_to_words(data))
+data_words = list(sent_to_words(documents))
 
 print(data_words[:1])
 
@@ -190,9 +177,11 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            alpha='auto',
                                            per_word_topics=True)
 
-# Print the Keyword in the 10 topics
-print("Print the Keyword in the 10 topics")
+# Print the Keyword in the topics
+print("Print the Keyword in the topics")
 pprint(lda_model.print_topics())
+print("Print the Keyword in the topics ; num_words = 1")
+pprint(lda_model.print_topics(num_words=1))
 doc_lda = lda_model[corpus]
 
 # Compute Perplexity
@@ -202,3 +191,10 @@ print('\nPerplexity: ', lda_model.log_perplexity(corpus))  # a measure of how go
 coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
 coherence_lda = coherence_model_lda.get_coherence()
 print('\nCoherence Score: ', coherence_lda)
+
+pprint("Top Topics")
+#pprint(lda_model.show_topics(num_topics=20, num_words=1, log=False, formatted=False))
+pprint(lda_model.top_topics(corpus, topn=1))
+
+for topic in lda_model.top_topics(corpus, topn=1):
+  pprint('Topic: ' + str(topic[0][0][1]))
