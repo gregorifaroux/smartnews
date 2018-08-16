@@ -57,10 +57,15 @@ dictionary = gensim.corpora.Dictionary.load('data/dictionary.gensim')
 corpus = pickle.load(open('data/corpus.pkl', 'rb'))
 ldamodel = gensim.models.ldamodel.LdaModel.load('data/model.gensim')
 
-new_doc = 'Alzheimer Hits Men and Women Differently, and We Need to Understand Why'
-print(new_doc)
-new_doc = prepare_text_for_lda(new_doc)
-new_doc_bow = dictionary.doc2bow(new_doc)
-print(new_doc)
-for idx, topic in ldamodel.get_document_topics(new_doc_bow, minimum_probability=0.2):
-    print('Topic: ' + str(ldamodel.show_topic(idx, 1)))
+def topic_for_doc(new_doc):
+    print(new_doc)
+    new_doc = prepare_text_for_lda(new_doc)
+    new_doc_bow = dictionary.doc2bow(new_doc)
+    print(new_doc)
+    for idx, topic in ldamodel.get_document_topics(new_doc_bow, minimum_probability=0.2):
+        print('Topic: ' + str(ldamodel.show_topic(idx, 3)))
+    print("")
+
+topic_for_doc('CRISPR causes significantly greater DNA damage than previously thought, study finds')
+topic_for_doc('At least 107 measles cases confirmed across 21 states')
+topic_for_doc('Why your mother age could be the key to longevity')

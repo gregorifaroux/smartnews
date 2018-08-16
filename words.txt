@@ -13,7 +13,6 @@ chromosome
 cytoplasm
 ectoplasm
 endoplasm
-gene
 gene%20editing
 gene%20sequencing
 genetics
