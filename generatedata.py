@@ -60,7 +60,8 @@ def get_google_documents(list, url):
   d = feedparser.parse(url)
   for entry in d['entries']:
     try:
-      page = urllib.request.urlopen(entry.link)
+      page = urllib.request.urlopen(urllib.request.Request(entry.link, data=None, headers={ 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}))
+#      page = urllib.request.urlopen(entry.link)
       print('  ' + entry.title)
       print("")
       list.append(text_from_html(page))
