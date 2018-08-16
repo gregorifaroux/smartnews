@@ -3,6 +3,8 @@ import urllib.request
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 import feedparser
+import pickle
+
 # Topic Modeling
 # 
 import warnings
@@ -161,6 +163,10 @@ texts = data_lemmatized
 print("5. View corpus")
 corpus = [id2word.doc2bow(text) for text in texts]
 
+#save the dictionary and corpus for future use.
+pickle.dump(corpus, open('data/corpus.pkl', 'wb'))
+id2word.save('data/dictionary.gensim')
+
 # View
 #print(corpus[:1])
 
@@ -178,6 +184,8 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            passes=10,
                                            alpha='auto',
                                            per_word_topics=True)
+# Save model to disk.
+lda_model.save('data/model.gensim')
 
 # Print the Keyword in the topics
 #print("Print the Keyword in the topics")
@@ -201,5 +209,3 @@ pprint("Top Topics")
 for topic in lda_model.top_topics(corpus, topn=1):
   pprint('Topic: ' + str(topic[0][0][1]))
 
-# Save model to disk.
-lda_model.save(datapath("model"))
