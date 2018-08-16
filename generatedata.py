@@ -179,7 +179,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 
 # Do lemmatization keeping only noun, adj, vb, adv
 print("4. Lemmatized")
-data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN'])
 
 #print(data_lemmatized[:1])
 
