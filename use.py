@@ -58,12 +58,13 @@ corpus = pickle.load(open('data/corpus.pkl', 'rb'))
 ldamodel = gensim.models.ldamodel.LdaModel.load('data/model.gensim')
 
 def topic_for_doc(new_doc):
+    print("*** topic_for_doc ***")
     print(new_doc)
     new_doc = prepare_text_for_lda(new_doc)
     new_doc_bow = dictionary.doc2bow(new_doc)
-    print(new_doc)
-    for idx, topic in ldamodel.get_document_topics(new_doc_bow, minimum_probability=0.2):
+    for idx, topic in ldamodel.get_document_topics(new_doc_bow, minimum_probability=0.1):
         print('Topic: ' + str(ldamodel.show_topic(idx, 3)))
+        print(topic)
     print("")
 
 topic_for_doc('CRISPR causes significantly greater DNA damage than previously thought, study finds')
