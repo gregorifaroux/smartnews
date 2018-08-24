@@ -145,7 +145,7 @@ id2word.save('data/dictionary.gensim')
 #print(corpus[:1])
 
 # Human readable format of corpus (term-frequency)
-#print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
+print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
 
 # Build LDA model
 print("6. Build LDA model")
@@ -197,16 +197,20 @@ def ret_top_model():
     top_topics: ranked topics in decreasing order. List of tuples
     """
     top_topics = [(0, 0)]
-    while top_topics[0][1] < 0.97:
+    while top_topics[0][1] < 0.55:
+        print('\ntop_topics[0][1]')
+        print(top_topics[0][1])
         lm = LdaModel(corpus=corpus, id2word=id2word)
         coherence_values = {}
         for n, topic in lm.show_topics(num_topics=-1, formatted=False):
             topic = [word for word, _ in topic]
             cm = CoherenceModel(topics=[topic], texts=data_lemmatized, dictionary=id2word, window_size=10)
             coherence_values[n] = cm.get_coherence()
+            print(coherence_values[n])
         top_topics = sorted(coherence_values.items(), key=operator.itemgetter(1), reverse=True)
     return lm, top_topics
     
+print('\n control the quality of the topic model we produce')
 lm, top_topics = ret_top_model()
 print(top_topics[:5])
 pprint([lm.show_topic(topicid) for topicid, c_v in top_topics[:10]])
