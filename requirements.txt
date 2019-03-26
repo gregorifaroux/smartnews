@@ -1,12 +1,3 @@
-spacy
-nltk
-feedparser
-pandas
-gensim
-wget
+requests
 bs4
 tqdm
-bokeh
-pyldavis
-matplotlib
-jupyter

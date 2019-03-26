@@ -1,4 +1,3 @@
-brew install tcl-tk
 pip3 install -r requirements.txt 
 python3 -m spacy download en
 # Run in python console
