@@ -2,6 +2,7 @@
 import sys, requests
 from pathlib import Path
 import hashlib, json, os
+import urllib
 
 # Download HTML
 from bs4 import BeautifulSoup
@@ -25,9 +26,7 @@ def getSources(category: str):
 # news API Category
 def mapping():
     d = {}
-    response = requests.get(
-        "https://newsapi.org/v1/sources?language=en"
-    )
+    response = requests.get("https://newsapi.org/v1/sources?language=en")
     response = response.json()
     for s in response["sources"]:
         d[s["id"]] = s["category"]
