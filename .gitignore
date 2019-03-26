@@ -103,3 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# new api key
+newsapi.key
+

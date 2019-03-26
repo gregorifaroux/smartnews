@@ -1,5 +1,5 @@
-pip install spacy nltk
-pip install feedparser pandas gensim wget bs4
+brew install tcl-tk
+pip3 install -r requirements.txt 
 python3 -m spacy download en
 # Run in python console
 python3 -c "import nltk; nltk.download('stopwords')"
