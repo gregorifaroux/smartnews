@@ -9,3 +9,4 @@ tqdm
 bokeh
 pyldavis
 matplotlib
+jupyter
