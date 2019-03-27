@@ -22,6 +22,11 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+#
+from sklearn.feature_extraction.text import TfidfVectorizer
+from wordcloud import WordCloud
+
+
 """
     Data discovery
 """
@@ -71,6 +76,17 @@ def keywords(data, category):
     return counter.most_common(10)
 
 
+def plot_word_cloud(terms):
+    text = terms.index
+    text = " ".join(list(text))
+    # lower max_font_size
+    wordcloud = WordCloud(max_font_size=40).generate(text)
+    plt.figure(figsize=(25, 25))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+
 def main():
 
     print("Data discovery ... ")
@@ -112,6 +128,20 @@ def main():
         print("top 10 keywords:", keywords(data, category))
         print("---")
 
+    print("Term frequencey-inverse document frequency")
+    vectorizer = TfidfVectorizer(
+        min_df=5, analyzer="word", ngram_range=(1, 2), stop_words="english"
+    )
+    vz = vectorizer.fit_transform(
+        list(data["tokens"].map(lambda tokens: " ".join(tokens)))
+    )
+    print(vz.shape)
+    tfidf = dict(zip(vectorizer.get_feature_names(), vectorizer.idf_))
+    tfidf = pd.DataFrame(columns=["tfidf"]).from_dict(dict(tfidf), orient="index")
+    tfidf.columns = ["tfidf"]
+
+    plot_word_cloud(tfidf.sort_values(by=["tfidf"], ascending=True).head(40))
+    plot_word_cloud(tfidf.sort_values(by=["tfidf"], ascending=False).head(40))
     print("Done")
 
 
