@@ -2,3 +2,5 @@ requests
 bs4
 tqdm
 nltk
+pandas
+matplotlib
